@@ -13,7 +13,6 @@ const config = {
   output: {
     library: 'VParser',
     libraryTarget: 'umd',
-    libraryExport: 'default',
     globalObject: 'this',
     filename: 'vparser.min.js',
     path: path.join(ROOT, 'libs/')
@@ -22,8 +21,7 @@ const config = {
     extensions: ['.ts']
   },
   optimization: {
-    minimizer: [
-      new TerserPlugin({
+    minimizer: [new TerserPlugin({
         terserOptions: {
           parse: {
             ecma: 8
@@ -45,8 +43,7 @@ const config = {
         parallel: true,
         cache: true,
         sourceMap: true
-      })
-    ]
+      })]
   },
   module: {
     strictExportPresence: true,

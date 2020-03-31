@@ -1,22 +1,9 @@
-type AttrInfo = string | number | Array < any > | Object;
+type AttrInfo = string | number | Array < string | number > | Object;
 
 type TagInfo = {
   [propName : string]: AttrInfo;
   url?: string
 }
-
-type PostHooks = Partial < {
-  targetDuration: Function,
-  mediaSequence: Function,
-  inf: Function,
-  streamInf: Function,
-  url: Function,
-  key: Function,
-  media: Function,
-  map: Function,
-  discontinuity: Function,
-  start: Function
-} >;
 
 type Segment = {
   start: number,
@@ -63,6 +50,8 @@ type M3u8JSON = MasterM3u8 | LevelM3u8 | {
   msg: string
 };
 
+type PostHooks = (x : TagInfo, y : M3u8JSON) => M3u8JSON
+
 const PREFIX_TAG_PATTERN = /EXT(?:-X-)?([^:]+):?(.*)$/;
 const TAG_PAIR_SPLIT_PATTERN = /([^,="]+)((="[^"]+")|(=[^,]+))*/g;
 
@@ -83,7 +72,7 @@ function formatNameToCamel(str) {
     }, '')
 }
 
-function parseTag(tagStr, postHooks) : TagInfo {
+function parseTag(tagStr : string) : TagInfo {
   if(!(/^#EXT/.test(tagStr) || !(/^\s*#/.test(tagStr)))) 
     return null;
   
@@ -98,10 +87,6 @@ function parseTag(tagStr, postHooks) : TagInfo {
     tagName = 'url';
     attr = tagStr;
   }
-
-  attr = postHooks && postHooks[tagName]
-    ? postHooks[tagName](attr)
-    : attr;
 
   return {[tagName]: attr}
 
@@ -178,7 +163,7 @@ function geneAbsUrl(url, base) {
   return base.join("/");
 }
 
-function mergeTags(tagList, result) {
+function mergeTags(tagList, result, postHooks : PostHooks) {
   let master = result.master;
   let len = tagList.length;
   let cc = 0;
@@ -211,7 +196,7 @@ function mergeTags(tagList, result) {
             segment['keyIndex'] = keyIndex;
           }
           segCount++;
-          duration += v;
+          duration = segment['end'];
           result['segments'].push(segment);
           break;
         case "start":
@@ -263,7 +248,9 @@ function mergeTags(tagList, result) {
           }
       }
     }
-
+    if (postHooks) {
+      result = postHooks(tagInfo, result)
+    }
   }
 
   if (!master) {
@@ -276,7 +263,7 @@ function mergeTags(tagList, result) {
 
 }
 
-function m3u8Parser(text : string, m3u8Url : string, postHooks?: PostHooks | null) : M3u8JSON {
+function m3u8Parser(text : string, m3u8Url : string, postHooks?: PostHooks) : M3u8JSON {
   if(!text || !m3u8Url) {
     return {error: 1, msg: "invalid input"}
   }
@@ -284,7 +271,7 @@ function m3u8Parser(text : string, m3u8Url : string, postHooks?: PostHooks | nul
   const tagList = text
     .split("\n")
     .filter(Boolean)
-    .map((x) => parseTag(x, postHooks))
+    .map((x) => parseTag(x.trim()))
     .filter(Boolean);
 
   if (!tagList.length) {
@@ -317,7 +304,7 @@ function m3u8Parser(text : string, m3u8Url : string, postHooks?: PostHooks | nul
   }
 
   try {
-    result = mergeTags(tagList, result);
+    result = mergeTags(tagList, result, postHooks);
   } catch (e) {
     return {error: 1, msg: e.message}
   }

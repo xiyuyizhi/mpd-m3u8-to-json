@@ -53,6 +53,7 @@ describe('#m3u8Parser', function () {
   it('test with discontinuity tag', () => {
     ret = m3u8Parser(m3u2, 'http://a.b.com/index.m3u8')
 
+    ret['duration']['should']['be'].equal(45)
     ret['segments']['length']['should']['be'].equal(5)
     ret['segments']['1']['cc']['should']['be'].equal(0)
     ret['segments']['2']['cc']['should']['be'].equal(1)

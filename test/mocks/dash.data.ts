@@ -51,7 +51,6 @@ export const dash2 = `
  <ProgramInformation moreInformationURL="http://gpac.sourceforge.net">
   <Title>bipbop_dash.mpd handcrafted by JYA</Title>
  </ProgramInformation>
-
  <Period duration="PT0H0M9.98S">
   <AdaptationSet segmentAlignment="true" maxWidth="400" maxHeight="300" maxFrameRate="90000" par="4:3" lang="und">
    <Representation id="1" mimeType="video/mp4" codecs="avc1.4d4015" width="400" height="300" frameRate="90000" sar="1:1" startWithSAP="1" bandwidth="226425">
@@ -67,9 +66,6 @@ export const dash2 = `
      <SegmentURL media="bipbop_video8.m4s"/>
      <SegmentURL media="bipbop_video9.m4s"/>
      <SegmentURL media="bipbop_video10.m4s"/>
-     <SegmentURL media="bipbop_video11.m4s"/>
-     <SegmentURL media="bipbop_video12.m4s"/>
-     <SegmentURL media="bipbop_video13.m4s"/>
     </SegmentList>
    </Representation>
   </AdaptationSet>
@@ -88,7 +84,6 @@ export const dash2 = `
      <SegmentURL media="bipbop_audio8.m4s"/>
      <SegmentURL media="bipbop_audio9.m4s"/>
      <SegmentURL media="bipbop_audio10.m4s"/>
-     <SegmentURL media="bipbop_audio11.m4s"/>
     </SegmentList>
    </Representation>
   </AdaptationSet>
