@@ -71,7 +71,10 @@ describe('#mpdParser', function() {
     <Representation audioSamplingRate="44100" bandwidth="67095" codecs="mp4a.40.2" id="800"></Representation>
   </AdaptationSet>`;
 
-    let ret = mpdParser(text);
+    let ret = mpdParser(text, (tagName, attrs) => {
+      // console.log(tagName);
+      return attrs;
+    });
 
     ret['should']['have'].property('adaptationSet');
     ret['adaptationSet']['should']['have']
@@ -134,6 +137,22 @@ describe('#mpdParser', function() {
     ]['have']
       .property('segmentURL')
       .length(10);
-    ret3['mPD']['clip_list']['should']['have'].property('clip').length(4);
+    ret3['mPD']['clipList']['should']['have'].property('clip').length(4);
+  });
+
+  it('test postHooks param', () => {
+    const text = `
+    <clip>
+    <start_ts_in_ms>60</start_ts_in_ms>
+    </clip>
+    `;
+
+    let ret = mpdParser(text, (tagName, attrs) => {
+      if (tagName == 'startTsInMs') {
+        attrs.value = parseFloat(attrs.value);
+      }
+      return attrs;
+    });
+    ret['clip']['startTsInMs']['value'].should.be.equal(60);
   });
 });

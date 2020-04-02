@@ -1,8 +1,18 @@
+type TagAttrs = {
+  [PropName: string]: any;
+};
+
 type TagInfo = {
   tagName?: string;
-  attrs?: any;
+  attrs?: TagAttrs;
   closed?: boolean;
 };
+
+type MPDJSON = {
+  [TagName: string]: any;
+};
+
+type PostHooks = (tagName: string, attrs: TagAttrs) => TagAttrs;
 
 const PREFIX_LINE_PATTERN = /\s*(<\/?[^>]+>)/;
 const TAG_ATTR_PATTERN = /\s*(?:<\/?([^\s>]+))?\s*([^>]+)*(?:\/?>)?/;
@@ -11,7 +21,15 @@ const ATTR_PAIR_PATTERN = /\s*([^=]+)="([^"]+)"/g;
 
 const formatName = tagName => {
   if (!tagName) return '';
-  return tagName.charAt(0).toLowerCase() + tagName.slice(1);
+
+  return tagName.split('_').reduce((all, c) => {
+    if (!all) {
+      all = c.charAt(0).toLowerCase() + c.slice(1);
+      return all;
+    }
+    all += c.charAt(0).toUpperCase() + c.slice(1);
+    return all;
+  }, '');
 };
 
 function parseTag(tagStr): TagInfo {
@@ -20,7 +38,8 @@ function parseTag(tagStr): TagInfo {
 
   const tagName = formatName(matched && matched[1]);
 
-  // tag or self closed tag that with attr
+  // <TagName xx=xx xxx=xxx>
+  // <TagName xx=xxx xx=xxx />
   if (matched && matched[1] && matched[2]) {
     let ret;
     let attrs = {};
@@ -36,22 +55,22 @@ function parseTag(tagStr): TagInfo {
 
   if (!matched) return null;
 
+  // </TagName>
   if (/^<\//.test(matched[0])) {
-    // closed tag
     tag['tagName'] = tagName;
     tag['closed'] = true;
     return tag;
   }
 
-  if (/^<(?!\/)/.test(matched[0])) {
-    // start tag without attr
+  // <TagName>
+  if (/^</.test(matched[0])) {
     tag['tagName'] = tagName;
     tag['attrs'] = {};
     return tag;
   }
 
   // pure value
-  tag['tageName'] = 'pureValue';
+  tag['tagName'] = 'pureValue';
   tag['attrs'] = {
     value: matched[2]
   };
@@ -59,7 +78,7 @@ function parseTag(tagStr): TagInfo {
   return tag;
 }
 
-function mergeTags(tagList) {
+function mergeTags(tagList, postHooks: PostHooks) {
   const stack = [];
   const len = tagList.length;
   let current: TagInfo;
@@ -98,8 +117,13 @@ function mergeTags(tagList) {
       break;
     }
 
-    const { tagName, attrs } = last;
+    let { tagName, attrs } = last;
     const prop = lastPre['attrs'][tagName];
+
+    // custom handler
+    if (postHooks) {
+      attrs = postHooks(tagName, attrs);
+    }
 
     if (prop) {
       lastPre['attrs'][tagName] = Array.isArray(prop)
@@ -124,7 +148,7 @@ function mergeTags(tagList) {
   return v['tagName'];
 }
 
-function mpdParser(text) {
+function mpdParser(text: string, postHooks?: PostHooks): MPDJSON {
   if (!text) {
     return { error: 1, msg: 'invalid input' };
   }
@@ -135,7 +159,8 @@ function mpdParser(text) {
         .split(PREFIX_LINE_PATTERN)
         .filter(Boolean)
         .map(x => parseTag(x))
-        .filter(Boolean)
+        .filter(Boolean),
+      postHooks
     );
   } catch (e) {
     return { error: 1, msg: e.message };

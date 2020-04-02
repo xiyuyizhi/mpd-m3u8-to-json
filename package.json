@@ -1,6 +1,6 @@
 {
   "name": "mpd-m3u8-to-json",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "parse mpeg dash manifests(.mpd) to json,parse hls manifests(.m3u8) to json",
   "main": "libs/vparser.min.js",
   "scripts": {
@@ -14,11 +14,10 @@
   },
   "keywords": [
     "dash",
-    "mpd",
     "hls",
-    "m3u8",
-    "parser",
-    "xml"
+    "mpd parser",
+    "m3u8 parser",
+    "xml parser"
   ],
   "author": "xiyuyizhi",
   "license": "ISC",
